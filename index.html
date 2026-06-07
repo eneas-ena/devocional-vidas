@@ -1,0 +1,771 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Devocional Bíblico — Igreja Vidas</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/mammoth@1.8.0/mammoth.browser.min.js"></script>
+<style>
+:root{
+  --green:#6c773f;--green-mid:#5b6536;--green-deep:#4a5530;--green-soft:#e9ecdc;
+  --cream:#f6f1e3;--cream-2:#faf6ec;--card:#ffffff;--gold:#cda349;--gold-soft:#f3e7c8;
+  --ink:#34372a;--ink-soft:#6e7059;--line:#e6e0cf;
+  --shadow:0 10px 30px rgba(60,66,40,.10);--shadow-sm:0 4px 14px rgba(60,66,40,.08);
+  --r:20px;--fs:1;
+}
+body.dark{
+  --green:#8a965a;--green-mid:#7c8850;--green-deep:#202517;--green-soft:#2c3320;
+  --cream:#191b14;--cream-2:#21241a;--card:#262a1d;--gold:#e0bd66;--gold-soft:#3a3622;
+  --ink:#ece8d8;--ink-soft:#a6a78c;--line:#363a28;
+  --shadow:0 10px 30px rgba(0,0,0,.35);--shadow-sm:0 4px 14px rgba(0,0,0,.3);
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{background:#cfc7ae;background-image:radial-gradient(circle at 50% 0,#ded6bd,#c5bda3);
+  font-family:'Cormorant Garamond',Georgia,serif;color:var(--ink);
+  display:flex;align-items:center;justify-content:center;min-height:100vh;padding:24px 12px}
+.phone{width:100%;max-width:412px;height:min(880px,94vh);background:var(--cream);
+  border-radius:42px;overflow:hidden;position:relative;font-size:calc(16px * var(--fs));
+  box-shadow:0 30px 70px rgba(40,44,24,.35), inset 0 0 0 10px #1c1d16, inset 0 0 0 12px #2a2c20;transition:background .35s}
+.screen{position:absolute;inset:0;display:none;flex-direction:column;background:var(--cream);transition:background .35s}
+.screen.active{display:flex;animation:fade .4s ease}
+@keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.scroll{flex:1;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch}
+.scroll::-webkit-scrollbar{width:0}
+.status{display:flex;justify-content:space-between;align-items:center;padding:14px 26px 4px;font-family:'Cinzel',serif;font-size:.82rem;font-weight:600;color:var(--ink);flex-shrink:0}
+.status .icons{display:flex;gap:6px;font-size:.7rem;letter-spacing:1px}
+h1,h2,h3{font-family:'Cinzel',serif}
+
+/* config banner */
+#cfg-banner{display:none;position:absolute;top:0;left:0;right:0;z-index:99;background:#8a3b2e;color:#fff;
+  padding:14px 18px;font-family:'Cormorant Garamond';font-size:.98rem;line-height:1.4;text-align:center}
+
+/* LOGIN */
+#login .scroll{display:flex;flex-direction:column;align-items:center;padding:8px 30px 30px;text-align:center;
+  background:radial-gradient(circle at 50% 18%, rgba(205,163,73,.18), transparent 60%),linear-gradient(180deg,var(--cream-2),var(--cream))}
+.logo-mark{font-size:2.4rem;color:var(--green);margin-top:18px;line-height:1}
+.welcome{font-size:1.5rem;color:var(--ink-soft);font-style:italic;margin-top:24px}
+.brand{font-family:'Cinzel';font-size:2.5rem;font-weight:600;color:var(--green-mid);letter-spacing:1px;margin-top:2px}
+.divider-orn{color:var(--gold);letter-spacing:6px;margin:8px 0 18px;font-size:.8rem}
+.bible-art{width:180px;height:112px;margin:4px 0 22px;filter:drop-shadow(0 12px 18px rgba(80,70,30,.25))}
+.field{width:100%;display:flex;align-items:center;gap:12px;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin-bottom:12px;box-shadow:var(--shadow-sm)}
+.field svg{flex-shrink:0;color:var(--ink-soft)}
+.field input{border:0;outline:0;background:transparent;font-family:'Cormorant Garamond';font-size:1.05rem;width:100%;color:var(--ink)}
+.field input::placeholder{color:var(--ink-soft);opacity:.8}
+.eye{cursor:pointer;color:var(--ink-soft)}
+.btn{width:100%;border:0;border-radius:14px;padding:15px;font-family:'Cinzel';font-size:1rem;font-weight:600;cursor:pointer;transition:.2s;display:flex;align-items:center;justify-content:center;gap:10px}
+.btn-primary{background:var(--green);color:#fff;box-shadow:0 8px 20px rgba(108,119,63,.4)}
+.btn-primary:hover{background:var(--green-mid)}
+.btn-primary:disabled{opacity:.6;cursor:wait}
+.btn-social{background:var(--card);color:var(--ink);border:1px solid var(--line);margin-bottom:12px;box-shadow:var(--shadow-sm);font-family:'Cormorant Garamond';font-size:1.05rem;font-weight:600}
+.or{display:flex;align-items:center;gap:14px;width:100%;color:var(--ink-soft);margin:18px 0 16px;font-family:'Cinzel';font-size:.72rem;letter-spacing:2px}
+.or::before,.or::after{content:"";flex:1;height:1px;background:var(--line)}
+.link{color:var(--green);font-weight:600;cursor:pointer;margin-top:16px;font-size:1rem}
+.link:hover{text-decoration:underline}
+.li-msg{min-height:20px;font-size:.98rem;margin:2px 0 6px;color:#a3502e}
+body.dark .li-msg{color:#e0a07e}
+.li-toggle{font-size:1rem;color:var(--ink-soft);margin-top:14px}
+.li-toggle b{color:var(--green);cursor:pointer}
+
+/* PENDING */
+#pending .scroll{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:40px 34px;gap:18px}
+#pending .ic{width:84px;height:84px;border-radius:50%;background:var(--gold-soft);display:flex;align-items:center;justify-content:center;color:var(--gold)}
+#pending h2{font-size:1.5rem;color:var(--green-mid)}
+#pending p{font-size:1.1rem;line-height:1.5;color:var(--ink-soft)}
+
+/* TOPBAR / HOME */
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:6px 20px 14px;flex-shrink:0}
+.icon-btn{background:none;border:0;cursor:pointer;color:var(--ink);width:38px;height:38px;display:flex;align-items:center;justify-content:center;border-radius:12px;transition:.2s}
+.icon-btn:hover{background:var(--green-soft)}
+.topbar .title{display:flex;align-items:center;gap:8px;font-family:'Cinzel';font-size:1.25rem;font-weight:600;color:var(--green-mid)}
+.hero{position:relative;height:230px;margin:0 16px;border-radius:var(--r);overflow:hidden;box-shadow:var(--shadow)}
+.hero svg{width:100%;height:100%;display:block}
+.hero img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:none}
+.hero .quote{position:absolute;left:0;right:0;bottom:0;padding:20px 18px 16px;background:linear-gradient(transparent,rgba(20,22,12,.82));color:#fbf7ea}
+.hero .quote .mark{font-family:'Cinzel';font-size:2rem;color:var(--gold);line-height:.4}
+.hero .quote p{font-size:1.18rem;font-style:italic;line-height:1.3;margin:2px 0 4px}
+.hero .quote .ref{font-family:'Cinzel';font-size:.78rem;color:var(--gold)}
+.year-card{margin:18px 16px 6px;background:var(--card);border-radius:var(--r);padding:16px 18px;display:flex;gap:14px;align-items:center;box-shadow:var(--shadow-sm);border:1px solid var(--line)}
+.year-badge{width:54px;height:54px;border-radius:50%;background:var(--green);display:flex;align-items:center;justify-content:center;color:#fff;flex-shrink:0}
+.year-card .lbl{color:var(--ink-soft);font-size:1rem}
+.year-card .name{font-family:'Cinzel';font-size:1.35rem;font-weight:600;color:var(--green-mid);line-height:1.1}
+.year-card .ref{color:var(--gold);font-family:'Cinzel';font-size:.78rem}
+.section-head{display:flex;justify-content:space-between;align-items:baseline;padding:20px 18px 10px}
+.section-head h3{font-family:'Cinzel';font-size:1.18rem;color:var(--ink)}
+.months-scroll{max-height:9.5em;overflow-y:auto;overflow-x:hidden;padding:0 16px}
+.months-scroll::-webkit-scrollbar{width:5px}
+.months-scroll::-webkit-scrollbar-thumb{background:var(--gold);border-radius:3px}
+.months{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;padding:0}
+.month{background:var(--card);border-radius:14px;padding:11px 6px;text-align:center;box-shadow:var(--shadow-sm);border:1px solid var(--line);cursor:pointer;transition:.2s;min-width:0}
+.month:hover{transform:translateY(-3px);border-color:var(--gold)}
+.month .m{font-family:'Cinzel';font-size:.66rem;color:var(--ink-soft);letter-spacing:1px}
+.month .em{font-size:1.35rem;margin:5px 0 4px}
+.month .t{font-size:.82rem;line-height:1.12;font-weight:600;color:var(--ink);min-height:2.6em;overflow-wrap:break-word;hyphens:auto}
+.month .r{font-size:.66rem;color:var(--ink-soft);margin-top:3px;overflow-wrap:break-word}
+.quick{display:grid;grid-template-columns:repeat(3,1fr);margin:20px 16px 0;background:var(--card);border-radius:16px;box-shadow:var(--shadow-sm);border:1px solid var(--line);overflow:hidden}
+.quick button{background:none;border:0;border-right:1px solid var(--line);padding:14px 6px;cursor:pointer;color:var(--ink);display:flex;flex-direction:column;align-items:center;gap:6px;font-family:'Cormorant Garamond';font-size:.92rem;font-weight:600;transition:.2s}
+.quick button:last-child{border-right:0}
+.quick button:hover{background:var(--green-soft)}
+.cta{margin:16px;padding-bottom:8px}
+
+/* DEVOTIONAL */
+.dev-head{background:var(--green-deep);color:#fbf7ea;padding:6px 18px 18px;flex-shrink:0}
+body.dark .dev-head{background:#11140b}
+.dev-head .status,.dev-head .status .icons{color:#fbf7ea}
+.dev-top{display:flex;align-items:center;gap:10px;margin-top:2px}
+.dev-top .icon-btn{color:#fbf7ea}.dev-top .icon-btn:hover{background:rgba(255,255,255,.12)}
+.dev-top .ttl{flex:1;text-align:center}
+.dev-top .ttl .k{font-family:'Cinzel';font-size:.78rem;letter-spacing:1px;color:var(--gold)}
+.dev-top .ttl .v{font-family:'Cinzel';font-size:1.3rem;font-weight:600}
+.dev-date{display:flex;align-items:center;gap:12px;margin-top:16px;font-family:'Cinzel';font-size:.82rem}
+.dev-date .chip{display:flex;align-items:center;gap:7px;color:#eee7cf}
+.dev-date .sep{width:1px;height:18px;background:rgba(255,255,255,.3)}
+.dev-body{padding:18px 16px 20px;margin-top:-4px}
+.empty-note{background:var(--gold-soft);color:#8a6a1e;border-radius:14px;padding:13px 15px;margin-bottom:13px;font-size:1rem;line-height:1.4}
+body.dark .empty-note{color:var(--gold)}
+.dcard{background:var(--card);border-radius:16px;padding:15px 16px;margin-bottom:13px;box-shadow:var(--shadow-sm);border:1px solid var(--line);display:flex;gap:13px;cursor:pointer;transition:.2s}
+.dcard:hover{transform:translateY(-2px)}
+.dcard .ico{width:40px;height:40px;border-radius:11px;flex-shrink:0;display:flex;align-items:center;justify-content:center;color:#fff}
+.dcard .c{flex:1;min-width:0}
+.dcard h4{font-family:'Cinzel';font-size:1.08rem;color:var(--ink);margin-bottom:3px;display:flex;justify-content:space-between;align-items:center}
+.dcard .sub{font-family:'Cinzel';font-size:.74rem;color:var(--green);margin-bottom:4px}
+.dcard p{font-size:1.06rem;line-height:1.4;color:var(--ink-soft)}
+.dcard.open p{display:none}
+.dcard .chev{color:var(--ink-soft);transition:.3s;flex-shrink:0}
+.dcard.open .chev{transform:rotate(90deg)}
+.dcard .full{max-height:0;overflow:hidden;transition:max-height .4s ease;font-size:1.06rem;line-height:1.45;color:var(--ink-soft);white-space:pre-wrap}
+.dcard.open .full{max-height:2200px;margin-top:8px}
+.note-area{width:100%;border:1px solid var(--line);border-radius:12px;background:var(--cream-2);padding:11px;font-family:'Cormorant Garamond';font-size:1.05rem;color:var(--ink);resize:vertical;min-height:80px;margin-top:8px;outline:none}
+.note-area:focus{border-color:var(--green)}
+.note-status{font-size:.82rem;color:var(--ink-soft);margin-top:4px;font-family:'Cinzel'}
+.progress{height:9px;background:var(--green-soft);border-radius:20px;overflow:hidden;margin-top:8px}
+.progress .bar{height:100%;background:linear-gradient(90deg,var(--green),var(--gold));border-radius:20px}
+.read-row{display:flex;justify-content:space-between;font-size:.95rem;color:var(--ink-soft);margin-top:6px}
+.botnav{display:flex;background:var(--card);border-top:1px solid var(--line);flex-shrink:0;padding:8px 4px}
+.botnav button{flex:1;background:none;border:0;cursor:pointer;color:var(--ink-soft);display:flex;flex-direction:column;align-items:center;gap:3px;font-family:'Cinzel';font-size:.6rem;padding:6px 2px;transition:.2s;letter-spacing:.3px}
+.botnav button:hover{color:var(--green)}
+.botnav button.accent{color:var(--green)}
+
+/* ADMIN */
+.adm-head{background:var(--green-deep);color:#fbf7ea;padding:6px 18px 16px;flex-shrink:0}
+.adm-head .status,.adm-head .status .icons{color:#fbf7ea}
+.adm-top{display:flex;align-items:center;gap:10px;margin-top:2px}
+.adm-top .icon-btn{color:#fbf7ea}.adm-top .icon-btn:hover{background:rgba(255,255,255,.12)}
+.adm-top h2{flex:1;text-align:center;font-family:'Cinzel';font-size:1.25rem;font-weight:600}
+.tabs{display:flex;gap:6px;margin-top:14px;background:rgba(255,255,255,.1);padding:5px;border-radius:13px}
+.tabs button{flex:1;border:0;background:none;color:#e8e2cc;font-family:'Cinzel';font-size:.66rem;padding:8px 3px;border-radius:9px;cursor:pointer;transition:.2s}
+.tabs button.active{background:var(--cream);color:var(--green-mid)}
+.adm-body{padding:18px 16px 30px}
+.adm-pane{display:none}.adm-pane.active{display:block;animation:fade .3s}
+.fieldset{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;margin-bottom:14px;box-shadow:var(--shadow-sm)}
+.fieldset h4{font-family:'Cinzel';font-size:1.05rem;color:var(--green-mid);margin-bottom:12px}
+label.fl{display:block;font-family:'Cinzel';font-size:.72rem;color:var(--ink-soft);letter-spacing:.5px;margin:10px 0 4px;text-transform:uppercase}
+.inp{width:100%;border:1px solid var(--line);border-radius:11px;background:var(--cream-2);padding:11px 12px;font-family:'Cormorant Garamond';font-size:1.05rem;color:var(--ink);outline:none}
+.inp:focus{border-color:var(--green)}
+textarea.inp{resize:vertical;min-height:70px;line-height:1.4}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.adm-btn{background:var(--green);color:#fff;border:0;border-radius:11px;padding:13px;font-family:'Cinzel';font-size:.92rem;font-weight:600;cursor:pointer;width:100%;margin-top:14px;transition:.2s}
+.adm-btn:hover{background:var(--green-mid)}
+.adm-btn.ghost{background:transparent;color:var(--green);border:1px solid var(--green)}
+.month-edit{display:grid;grid-template-columns:34px 1fr 1fr;gap:8px;align-items:center;margin-bottom:8px}
+.month-edit .mm{font-family:'Cinzel';font-size:.78rem;color:var(--ink-soft)}
+.user-item{display:flex;align-items:center;gap:11px;padding:11px;border:1px solid var(--line);border-radius:12px;margin-bottom:8px;background:var(--cream-2)}
+.user-item.pend{border-color:var(--gold);background:var(--gold-soft)}
+.user-item .av{width:36px;height:36px;border-radius:50%;background:var(--green);color:#fff;display:flex;align-items:center;justify-content:center;font-family:'Cinzel';font-weight:600;flex-shrink:0}
+.user-item .ui{flex:1;min-width:0}.user-item .ui .n{font-weight:600;color:var(--ink)}
+.user-item .ui .e{font-size:.9rem;color:var(--ink-soft);overflow:hidden;text-overflow:ellipsis}
+.mini{font-family:'Cinzel';font-size:.66rem;border:0;border-radius:16px;padding:6px 10px;cursor:pointer}
+.mini.ok{background:var(--green);color:#fff}.mini.del{background:transparent;color:#b15;border:1px solid #b15}
+.role-sel{font-family:'Cormorant Garamond';font-size:.85rem;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--ink);padding:4px}
+
+/* drawer */
+.drawer-bg{position:absolute;inset:0;background:rgba(20,22,12,.45);opacity:0;pointer-events:none;transition:.3s;z-index:40}
+.drawer-bg.show{opacity:1;pointer-events:auto}
+.drawer{position:absolute;top:0;left:0;bottom:0;width:74%;max-width:300px;background:var(--cream-2);transform:translateX(-100%);transition:.32s cubic-bezier(.4,0,.2,1);z-index:41;box-shadow:8px 0 30px rgba(0,0,0,.2);display:flex;flex-direction:column}
+.drawer.show{transform:none}
+.drawer .dh{background:var(--green-deep);color:#fbf7ea;padding:30px 22px 22px}
+.drawer .dh .lg{font-size:1.8rem;color:var(--gold)}
+.drawer .dh .nm{font-family:'Cinzel';font-size:1.3rem;font-weight:600;margin-top:6px}
+.drawer .dh .em{font-size:.9rem;opacity:.8;word-break:break-all}
+.drawer nav{padding:14px 12px;flex:1}
+.drawer nav a{display:flex;align-items:center;gap:14px;padding:14px;border-radius:12px;cursor:pointer;font-family:'Cinzel';font-size:1rem;color:var(--ink);transition:.2s}
+.drawer nav a:hover{background:var(--green-soft)}
+.drawer nav a svg{color:var(--green)}
+.drawer nav a.admin-only{display:none}
+.drawer .foot{padding:16px 22px;font-size:.85rem;color:var(--ink-soft);border-top:1px solid var(--line);font-family:'Cinzel'}
+.toast{position:absolute;left:50%;bottom:84px;transform:translateX(-50%) translateY(20px);background:var(--green-deep);color:#fbf7ea;padding:12px 20px;border-radius:30px;font-size:.95rem;opacity:0;pointer-events:none;transition:.3s;z-index:60;box-shadow:var(--shadow);font-family:'Cinzel';max-width:80%;text-align:center}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.loader{position:absolute;inset:0;background:var(--cream);display:flex;align-items:center;justify-content:center;z-index:70;flex-direction:column;gap:14px}
+.loader .ld{font-size:2rem;color:var(--green);animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loader.hide{display:none}
+</style>
+</head>
+<body>
+<div class="phone" id="phone">
+  <div id="cfg-banner"></div>
+
+  <!-- LOGIN -->
+  <section class="screen active" id="login">
+    <div class="status"><span>9:41</span><span class="icons">▪ ▪ ▪ ◵ 🔋</span></div>
+    <div class="scroll">
+      <div class="logo-mark">✟</div>
+      <div class="welcome">Bem-vindo ao</div>
+      <div class="brand">Devocional</div>
+      <div class="divider-orn">◆ ✦ ◆</div>
+      <svg class="bible-art" viewBox="0 0 210 130" fill="none">
+        <ellipse cx="105" cy="118" rx="92" ry="9" fill="#000" opacity=".12"/>
+        <path d="M105 36C84 22 40 24 18 32v74c22-8 66-10 87 4 21-14 65-12 87-4V32c-22-8-66-10-87 4z" fill="#fff" stroke="#c2b48a" stroke-width="1.5"/>
+        <path d="M105 36v74" stroke="#c9bd95" stroke-width="1.5"/>
+        <path d="M30 44c16-5 50-6 67 4M30 56c16-5 50-6 67 4M30 68c16-5 50-6 67 4" stroke="#ddd3b6" stroke-width="1.2"/>
+        <path d="M113 40c17-10 51-9 67-4M113 52c17-10 51-9 67-4M113 64c17-10 51-9 67-4" stroke="#ddd3b6" stroke-width="1.2"/>
+        <path d="M105 8v22M97 16h16" stroke="#6c773f" stroke-width="3.5" stroke-linecap="round"/>
+      </svg>
+      <div id="li-name-field" class="field" style="display:none"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg><input id="li-name" type="text" placeholder="Seu nome"></div>
+      <div class="field"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 5L2 7"/></svg><input id="li-email" type="email" placeholder="E-mail" autocomplete="email"></div>
+      <div class="field"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg><input id="li-pass" type="password" placeholder="Senha" autocomplete="current-password"><span class="eye" onclick="togglePass()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg></span></div>
+      <div class="li-msg" id="li-msg"></div>
+      <button class="btn btn-primary" id="li-btn" onclick="submitAuth()">Entrar</button>
+      <div class="or">OU</div>
+      <button class="btn btn-social" onclick="toast('O login com Google será ativado em breve.')"><svg width="20" height="20" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.5 12.2c0-.7-.1-1.4-.2-2H12v3.9h5.9a5 5 0 0 1-2.2 3.3v2.7h3.6c2.1-2 3.2-4.8 3.2-7.9z"/><path fill="#34A853" d="M12 23c2.9 0 5.4-1 7.2-2.6l-3.6-2.7c-1 .7-2.3 1-3.6 1-2.8 0-5.1-1.9-6-4.4H2.3v2.8A11 11 0 0 0 12 23z"/><path fill="#FBBC05" d="M6 14.3a6.6 6.6 0 0 1 0-4.2V7.3H2.3a11 11 0 0 0 0 9.8L6 14.3z"/><path fill="#EA4335" d="M12 5.5c1.6 0 3 .5 4.1 1.6l3.1-3.1A11 11 0 0 0 2.3 7.3L6 10.1c.9-2.6 3.2-4.6 6-4.6z"/></svg> Continuar com Google</button>
+      <button class="btn btn-social" onclick="toast('O login com Apple será ativado em breve.')"><svg width="18" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M17.05 12.5c0-2.7 2.2-4 2.3-4.05a4.9 4.9 0 0 0-3.86-2.1c-1.64-.17-3.2.96-4.03.96-.83 0-2.11-.94-3.47-.91A5.13 5.13 0 0 0 3.7 9.06c-1.86 3.23-.47 8 1.33 10.6.88 1.28 1.93 2.7 3.3 2.65 1.33-.05 1.83-.85 3.43-.85s2.05.85 3.45.82c1.43-.02 2.33-1.3 3.2-2.58a10.6 10.6 0 0 0 1.45-2.98c-.03-.02-2.78-1.07-2.81-4.22zM14.5 4.4A4.8 4.8 0 0 0 15.6 1a4.86 4.86 0 0 0-3.16 1.63 4.55 4.55 0 0 0-1.14 3.3 4.02 4.02 0 0 0 3.2-1.53z"/></svg> Continuar com Apple</button>
+      <div class="li-toggle" id="li-toggle">Não tem conta? <b onclick="toggleMode()">Cadastre-se</b></div>
+    </div>
+  </section>
+
+  <!-- PENDING -->
+  <section class="screen" id="pending">
+    <div class="status"><span>9:41</span><span class="icons">▪ ▪ ▪ ◵ 🔋</span></div>
+    <div class="scroll">
+      <div class="ic"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></div>
+      <h2>Cadastro recebido</h2>
+      <p>Sua conta foi criada e está aguardando a aprovação da liderança da Igreja Vidas. Assim que for liberada, você terá acesso ao devocional.</p>
+      <button class="btn btn-primary" onclick="doLogout()" style="margin-top:10px">Sair</button>
+    </div>
+  </section>
+
+  <!-- HOME -->
+  <section class="screen" id="home">
+    <div class="status"><span>9:41</span><span class="icons">▪ ▪ ▪ ◵ 🔋</span></div>
+    <div class="topbar">
+      <button class="icon-btn" onclick="openDrawer()"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M3 12h18M3 18h18"/></svg></button>
+      <div class="title"><span style="color:var(--gold)">✟</span> Devocional</div>
+      <button class="icon-btn" onclick="toast('Você está em dia com as leituras 🔔')"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9M13.7 21a2 2 0 0 1-3.4 0"/></svg></button>
+    </div>
+    <div class="scroll">
+      <div class="hero" id="hero">
+        <img id="hero-img" alt="">
+        <svg id="hero-svg" viewBox="0 0 400 230" preserveAspectRatio="xMidYMid slice">
+          <defs>
+            <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f4c66a"/><stop offset=".45" stop-color="#e8a45a"/><stop offset="1" stop-color="#8a6a48"/></linearGradient>
+            <radialGradient id="sun" cx="68%" cy="38%" r="40%"><stop offset="0" stop-color="#fff6d8"/><stop offset=".5" stop-color="#ffe39a" stop-opacity=".9"/><stop offset="1" stop-color="#ffe39a" stop-opacity="0"/></radialGradient>
+          </defs>
+          <rect width="400" height="230" fill="url(#sky)"/>
+          <circle cx="272" cy="88" r="120" fill="url(#sun)"/><circle cx="272" cy="88" r="26" fill="#fff7e0"/>
+          <path d="M0 150c60-30 120 10 180-6s140-40 220-8v94H0z" fill="#6f5a3e" opacity=".55"/>
+          <path d="M0 172c70-22 130 14 210 0s130-30 190-6v64H0z" fill="#3e4a2c"/>
+          <path d="M0 188c80-16 150 12 220 2s120-20 180-4v24H0z" fill="#2c3520"/>
+          <g transform="translate(300 96)"><path d="M0 0v66M-13 16h26" stroke="#1d1d14" stroke-width="6" stroke-linecap="round"/></g>
+        </svg>
+        <div class="quote"><div class="mark">"</div><p id="h-quote">—</p><div class="ref" id="h-quote-ref"></div></div>
+      </div>
+      <div class="year-card">
+        <div class="year-badge"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22c4-3 7-6 7-11a7 7 0 0 0-14 0c0 5 3 8 7 11z"/></svg></div>
+        <div><div class="lbl">Tema do Ano:</div><div class="name" id="h-year">—</div><div class="ref" id="h-year-ref"></div></div>
+      </div>
+      <div class="section-head"><h3>Temas dos Meses</h3><span style="font-size:.92rem;color:var(--ink-soft)">role para ver ↓</span></div>
+      <div class="months-scroll"><div class="months" id="h-months"></div></div>
+      <div class="quick">
+        <button onclick="doLogout()"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>Sair</button>
+        <button onclick="toggleDark()"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg><span id="dark-lbl">Modo Escuro</span></button>
+        <button onclick="cycleFont()"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19l5-13 5 13M6 14h6"/><path d="M16 19l3-8 3 8M17.5 16h3"/></svg>Aumentar Fonte</button>
+      </div>
+      <div class="cta"><button class="btn btn-primary" onclick="go('dev')"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg> Ir para o Devocional <span style="margin-left:auto">›</span></button></div>
+    </div>
+  </section>
+
+  <!-- DEVOTIONAL -->
+  <section class="screen" id="dev">
+    <div class="dev-head">
+      <div class="status"><span>9:41</span><span class="icons">▪ ▪ ▪ ◵ 🔋</span></div>
+      <div class="dev-top">
+        <button class="icon-btn" onclick="go('home')"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg></button>
+        <div class="ttl"><div class="k">Tema do Dia</div><div class="v" id="d-week">—</div></div><button class="icon-btn" onclick="openDateJump()" title="Escolher data"><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></button>
+      </div>
+      <div class="dev-date" onclick="openDateJump()" style="cursor:pointer">
+        <span class="chip"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg><span id="d-date"></span></span>
+        <span class="sep"></span><span class="chip" id="d-day"></span>
+      </div>
+      <input type="date" id="d-jump" onchange="jumpDate(this.value)" style="position:absolute;width:1px;height:1px;opacity:0;pointer-events:none;left:18px;bottom:0">
+    </div>
+    <div class="scroll"><div class="dev-body" id="d-body"></div></div>
+    <div class="botnav">
+      <button onclick="changeDay(-1)"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>Dia anterior</button>
+      <button onclick="changeDay(1)"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>Dia seguinte</button>
+      <button onclick="shareDev()"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"/></svg>Compartilhar</button>
+      <button onclick="speakDev()"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M15.5 8.5a5 5 0 0 1 0 7M19 5a9 9 0 0 1 0 14"/></svg>Ouvir</button>
+      <button onclick="go('home')" class="accent"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 10l9-7 9 7v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>Início</button>
+    </div>
+  </section>
+
+  <!-- ADMIN -->
+  <section class="screen" id="admin">
+    <div class="adm-head">
+      <div class="status"><span>9:41</span><span class="icons">▪ ▪ ▪ ◵ 🔋</span></div>
+      <div class="adm-top"><button class="icon-btn" onclick="go('home')"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg></button><h2>Administração</h2><div style="width:38px"></div></div>
+      <div class="tabs">
+        <button class="active" onclick="admTab('home',this)">Início</button>
+        <button onclick="admTab('dev',this)">Devocional</button>
+        <button onclick="admTab('users',this)">Usuários</button>
+        <button onclick="admTab('import',this)">Importar</button>
+      </div>
+    </div>
+    <div class="scroll"><div class="adm-body">
+      <div class="adm-pane active" id="ap-home">
+        <div class="fieldset"><h4>🖼️ Imagem de capa</h4>
+          <img id="capa-preview" style="width:100%;border-radius:12px;display:none;margin-bottom:10px">
+          <label class="fl">Enviar uma nova imagem</label>
+          <input type="file" accept="image/*" onchange="uploadCapa(this)" style="font-family:'Cormorant Garamond';font-size:.98rem;color:var(--ink)">
+          <div style="font-size:.86rem;color:var(--ink-soft);margin-top:8px;line-height:1.35">A imagem aparece atrás da mensagem, na tela inicial. Use uma foto na horizontal para melhor resultado.</div>
+        </div>
+        <div class="fieldset"><h4>✟ Mensagem de capa</h4>
+          <label class="fl">Mensagem</label><textarea class="inp" id="a-quote"></textarea>
+          <label class="fl">Referência</label><input class="inp" id="a-quote-ref"></div>
+        <div class="fieldset"><h4>🌿 Tema do Ano</h4>
+          <label class="fl">Título</label><input class="inp" id="a-year">
+          <label class="fl">Referência</label><input class="inp" id="a-year-ref"></div>
+        <div class="fieldset"><h4>📅 Temas dos Meses (4 primeiros)</h4><div id="a-months"></div></div>
+        <button class="adm-btn" onclick="saveHome()">Salvar Tela Inicial</button>
+      </div>
+      <div class="adm-pane" id="ap-dev">
+        <div class="fieldset"><h4>📖 Cadastro do Devocional</h4>
+          <label class="fl">Data</label><input class="inp" type="date" id="a-d-date" onchange="loadDevForEdit()">
+          <div style="font-size:.84rem;color:var(--ink-soft);margin-top:5px;line-height:1.35">Ao trocar a data, o conteúdo já salvo daquele dia aparece para edição. Se o dia estiver livre, os campos ficam em branco.</div>
+          <label class="fl">Tema do dia</label><input class="inp" id="a-d-week">
+          <div class="row2"><div><label class="fl">Texto (ref.)</label><input class="inp" id="a-d-textref" placeholder="João 15:4-5"></div><div><label class="fl">Leitura anual</label><input class="inp" id="a-d-read"></div></div>
+          <label class="fl">Texto bíblico</label><textarea class="inp" id="a-d-text"></textarea>
+          <label class="fl">Meditação</label><textarea class="inp" id="a-d-medit"></textarea>
+          <label class="fl">Desafio prático</label><textarea class="inp" id="a-d-chall"></textarea>
+          <label class="fl">Oração</label><textarea class="inp" id="a-d-prayer"></textarea>
+        </div>
+        <button class="adm-btn" onclick="saveDev()">Salvar Devocional</button>
+      </div>
+      <div class="adm-pane" id="ap-users">
+        <div class="fieldset"><h4>➕ Autorizar e-mail manualmente</h4>
+          <label class="fl">E-mail</label><input class="inp" id="a-u-email" placeholder="email@exemplo.com">
+          <label class="fl">Nome</label><input class="inp" id="a-u-name" placeholder="Nome">
+          <button class="adm-btn" onclick="addUser()">Autorizar</button></div>
+        <div class="fieldset"><h4>👥 Membros (<span id="u-count">0</span>)</h4><div id="u-list"></div></div>
+      </div>
+      <div class="adm-pane" id="ap-import">
+        <div class="fieldset"><h4>📥 Importar devocionais</h4>
+          <label class="fl">Ano deste conjunto</label>
+          <input class="inp" id="imp-year" type="number" placeholder="2027" value="2027" oninput="impPreview()">
+          <label class="fl">Enviar o arquivo do mês (.docx ou .txt)</label>
+          <input type="file" accept=".docx,.txt" onchange="impFile(this)" style="font-family:'Cormorant Garamond';font-size:.98rem;color:var(--ink)">
+          <label class="fl">…ou cole o texto aqui</label>
+          <textarea class="inp" id="imp-text" style="min-height:110px" oninput="impPreview()" placeholder="Cole aqui o conteúdo de um mês inteiro"></textarea>
+          <div id="imp-status" style="font-size:.92rem;color:var(--green);margin-top:8px;min-height:18px"></div>
+          <div id="imp-preview" style="font-size:.9rem;color:var(--ink-soft);margin-top:6px;line-height:1.4"></div>
+          <button class="adm-btn" onclick="runImport()">Importar para o banco</button>
+        </div>
+        <div style="font-size:.86rem;color:var(--ink-soft);line-height:1.4;padding:0 4px">Importe um mês de cada vez. Se um mês sair errado, basta reenviá-lo — dias com a mesma data são atualizados, não duplicados. A "Leitura da Bíblia anual" é preenchida automaticamente pelo plano do Projeto Timóteo.</div>
+      </div>
+    </div></div>
+  </section>
+
+  <!-- drawer -->
+  <div class="drawer-bg" id="drawer-bg" onclick="closeDrawer()"></div>
+  <aside class="drawer" id="drawer">
+    <div class="dh"><div class="lg">✟</div><div class="nm" id="dr-name">Igreja Vidas</div><div class="em" id="dr-email"></div></div>
+    <nav>
+      <a onclick="closeDrawer();go('home')"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 10l9-7 9 7v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg> Início</a>
+      <a onclick="closeDrawer();go('dev')"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg> Devocional de Hoje</a>
+      <a class="admin-only" id="nav-admin" onclick="closeDrawer();go('admin')"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.6 1.6 0 0 0 .3 1.8 2 2 0 1 1-2.8 2.8 1.6 1.6 0 0 0-2.7 1.1V21a2 2 0 1 1-4 0 1.6 1.6 0 0 0-2.6-1.1 2 2 0 1 1-2.8-2.8A1.6 1.6 0 0 0 3 13.6a2 2 0 1 1 0-4A1.6 1.6 0 0 0 4.6 7a2 2 0 1 1 2.8-2.8A1.6 1.6 0 0 0 10 3V3a2 2 0 1 1 4 0 1.6 1.6 0 0 0 2.6 1.1 2 2 0 1 1 2.8 2.8A1.6 1.6 0 0 0 21 10z"/></svg> Administração</a>
+      <a onclick="closeDrawer();toggleDark()"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg> Alternar Tema</a>
+      <a onclick="closeDrawer();doLogout()"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg> Sair</a>
+    </nav>
+    <div class="foot">Igreja Vidas · v1.0</div>
+  </aside>
+
+  <div class="toast" id="toast"></div>
+  <div class="loader hide" id="loader"><div class="ld">✟</div></div>
+</div>
+
+<script>
+/* ===================================================================
+   CONFIGURAÇÃO — preencha as duas linhas abaixo com os dados do seu
+   projeto no Supabase (Settings → API Keys). Mantenha as aspas.
+   =================================================================== */
+const SUPABASE_URL = 'https://mbfmuofxwurrmhjyyqit.supabase.co';      // ex.: https://mbfmuofxwurrmhjyyqit.supabase.co
+const SUPABASE_KEY = 'sb_publishable_TXzHJ6MVFsUeT1-uxkFR6A_w2tpG7vt';    // a "Publishable key" (sb_publishable_...)
+/* =================================================================== */
+
+const MONTHS_PT=['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
+const MONTH_ABBR=['JAN','FEV','MAR','ABR','MAI','JUN','JUL','AGO','SET','OUT','NOV','DEZ'];
+const DEFAULT_MONTHS=[{em:'🌱',t:'Um novo começo',r:'João 1:1-5'},{em:'❤️',t:'Amor que transforma',r:'1 João 4:7-11'},{em:'🌿',t:'Crescendo em Cristo',r:'Colossenses 2:6-7'},{em:'👑',t:'Propósitos do Reino',r:'Mateus 6:33'},{em:'🔥',t:'Avivamento',r:'Atos 2:1-4'},{em:'🕊️',t:'Paz que excede',r:'Filipenses 4:7'},{em:'💧',t:'Água viva',r:'João 4:14'},{em:'⚓',t:'Esperança firme',r:'Hebreus 6:19'},{em:'🌾',t:'Tempo de colheita',r:'Gálatas 6:9'},{em:'🛡️',t:'A armadura de Deus',r:'Efésios 6:11'},{em:'🙏',t:'Gratidão',r:'1 Tess. 5:18'},{em:'✨',t:'Emanuel conosco',r:'Mateus 1:23'}];
+
+let sb=null, session=null, me=null, isAdmin=false, signupMode=false;
+let state={date:new Date(), theme:'light', fontStep:0, home:{}, dev:null};
+
+function dayOfYear(d){const s=new Date(d.getFullYear(),0,0);return Math.floor((d-s)/864e5)}
+function ymd(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
+function fmtDate(d){return d.getDate()+' de '+MONTHS_PT[d.getMonth()]+' de '+d.getFullYear()}
+function twelveMonths(arr){arr=Array.isArray(arr)?arr:[];const out=[];for(let i=0;i<12;i++){const s=arr[i]||DEFAULT_MONTHS[i]||{em:'📖',t:'',r:''};out.push({em:s.em||'📖',t:s.t||'',r:s.r||''})}return out}
+function esc(s){return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+let tT;function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');clearTimeout(tT);tT=setTimeout(()=>t.classList.remove('show'),2600)}
+function loading(on){document.getElementById('loader').classList.toggle('hide',!on)}
+
+/* ---------- init ---------- */
+(async function init(){
+  if(SUPABASE_URL.includes('SUA_URL') || SUPABASE_KEY.includes('SUA_CHAVE')){
+    const b=document.getElementById('cfg-banner');b.style.display='block';
+    b.innerHTML='⚠ Falta configurar o app. Abra este arquivo num editor de texto e preencha SUPABASE_URL e SUPABASE_KEY no topo do bloco &lt;script&gt;.';
+    return;
+  }
+  sb=window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  const {data}=await sb.auth.getSession();
+  await handleSession(data.session);
+  sb.auth.onAuthStateChange((_e,s)=>{ if((s&&!session)||(!s&&session)) handleSession(s); });
+})();
+
+async function handleSession(s){
+  session=s;
+  if(!s){ go('login'); return; }
+  loading(true);
+  const {data,error}=await sb.from('membros').select('*').eq('email', s.user.email).maybeSingle();
+  loading(false);
+  if(error){ toast('Erro ao verificar acesso.'); return; }
+  me=data;
+  if(!me || !me.ativo){ go('pending'); return; }
+  isAdmin = me.papel==='admin';
+  document.getElementById('nav-admin').style.display = isAdmin ? 'flex' : 'none';
+  document.getElementById('dr-name').textContent = me.nome || 'Igreja Vidas';
+  document.getElementById('dr-email').textContent = s.user.email;
+  await loadHome();
+  go('home');
+}
+
+/* ---------- auth ---------- */
+function togglePass(){const i=document.getElementById('li-pass');i.type=i.type==='password'?'text':'password'}
+function toggleMode(){
+  signupMode=!signupMode;
+  document.getElementById('li-name-field').style.display=signupMode?'flex':'none';
+  document.getElementById('li-btn').textContent=signupMode?'Cadastrar':'Entrar';
+  document.getElementById('li-toggle').innerHTML=signupMode?'Já tem conta? <b onclick="toggleMode()">Entrar</b>':'Não tem conta? <b onclick="toggleMode()">Cadastre-se</b>';
+  document.getElementById('li-msg').textContent='';
+}
+async function submitAuth(){
+  const email=document.getElementById('li-email').value.trim();
+  const pass=document.getElementById('li-pass').value;
+  const msg=document.getElementById('li-msg');
+  const btn=document.getElementById('li-btn');
+  if(!email||!pass){msg.textContent='Preencha e-mail e senha.';return;}
+  btn.disabled=true; msg.textContent='';
+  try{
+    if(signupMode){
+      const nome=document.getElementById('li-name').value.trim();
+      const {data,error}=await sb.auth.signUp({email,password:pass,options:{data:{nome}}});
+      if(error) throw error;
+      if(!data.session){ msg.style.color=''; msg.textContent='Conta criada! Verifique seu e-mail para confirmar e depois entre.'; toggleMode(); }
+    }else{
+      const {error}=await sb.auth.signInWithPassword({email,password:pass});
+      if(error) throw error;
+    }
+  }catch(e){
+    const m=(e.message||'').toLowerCase();
+    if(m.includes('invalid')) msg.textContent='E-mail ou senha incorretos.';
+    else if(m.includes('already')) msg.textContent='Este e-mail já está cadastrado. Tente entrar.';
+    else if(m.includes('at least')||m.includes('6 char')) msg.textContent='A senha precisa ter ao menos 6 caracteres.';
+    else msg.textContent=e.message||'Não foi possível continuar.';
+  }finally{ btn.disabled=false; }
+}
+async function doLogout(){ closeDrawer(); speechSynthesis.cancel(); me=null;isAdmin=false; await sb.auth.signOut(); session=null; go('login'); }
+
+/* ---------- navigation ---------- */
+function go(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  document.querySelector('#'+id+' .scroll')?.scrollTo(0,0);
+  speechSynthesis.cancel();
+  if(id==='dev') renderDev();
+  if(id==='admin') openAdmin();
+}
+function openDrawer(){document.getElementById('drawer').classList.add('show');document.getElementById('drawer-bg').classList.add('show')}
+function closeDrawer(){document.getElementById('drawer').classList.remove('show');document.getElementById('drawer-bg').classList.remove('show')}
+function toggleDark(){state.theme=state.theme==='light'?'dark':'light';document.body.classList.toggle('dark',state.theme==='dark');document.getElementById('dark-lbl').textContent=state.theme==='dark'?'Modo Claro':'Modo Escuro';toast(state.theme==='dark'?'Modo escuro 🌙':'Modo claro ☀️')}
+const FS=[1,1.12,1.26,1.4];function cycleFont(){state.fontStep=(state.fontStep+1)%FS.length;document.getElementById('phone').style.setProperty('--fs',FS[state.fontStep]);toast('Fonte: '+Math.round(FS[state.fontStep]*100)+'%')}
+
+/* ---------- HOME data ---------- */
+async function loadHome(){
+  const {data}=await sb.from('config_home').select('*');
+  const map={}; (data||[]).forEach(r=>map[r.chave]=r.valor);
+  state.home={
+    quote:(map.citacao&&map.citacao.texto)||'Cada novo dia é uma oportunidade de permanecer em Cristo.',
+    quoteRef:(map.citacao&&map.citacao.ref)||'',
+    year:(map.tema_ano&&map.tema_ano.titulo)||'Permanecer em Cristo',
+    yearRef:(map.tema_ano&&map.tema_ano.ref)||'',
+    months:twelveMonths(map.temas_meses),
+    capa:(typeof map.capa==='string'?map.capa:'')
+  };
+  renderHome();
+}
+function renderHome(){
+  const h=state.home;
+  document.getElementById('h-quote').textContent=h.quote;
+  document.getElementById('h-quote-ref').textContent=h.quoteRef;
+  document.getElementById('h-year').textContent=h.year;
+  document.getElementById('h-year-ref').textContent=h.yearRef;
+  const himg=document.getElementById('hero-img'), hsvg=document.getElementById('hero-svg');
+  if(h.capa){ himg.onerror=()=>{himg.style.display='none';hsvg.style.display='block'}; himg.src=h.capa; himg.style.display='block'; hsvg.style.display='none'; }
+  else { himg.style.display='none'; hsvg.style.display='block'; }
+  const w=document.getElementById('h-months');w.innerHTML='';
+  h.months.forEach((m,i)=>{const e=document.createElement('div');e.className='month';e.innerHTML='<div class="m">'+MONTH_ABBR[i]+'</div><div class="em">'+(m.em||'📖')+'</div><div class="t">'+esc(m.t)+'</div><div class="r">'+esc(m.r)+'</div>';e.onclick=()=>toast((m.t||'Mês')+(m.r?' — '+m.r:''));w.appendChild(e)});
+}
+
+/* ---------- DEVOTIONAL ---------- */
+async function renderDev(){
+  const d=state.date;
+  document.getElementById('d-date').textContent=fmtDate(d);
+  document.getElementById('d-day').textContent='Dia '+dayOfYear(d)+' do Ano';
+  document.getElementById('d-body').innerHTML='<div class="empty-note">Carregando…</div>';
+  const {data:dev}=await sb.from('devocionais').select('*').eq('data',ymd(d)).maybeSingle();
+  state.dev=dev;
+  document.getElementById('d-week').textContent=(dev&&dev.tema_semana)||state.home.year||'Devocional';
+  let note='';
+  const {data:an}=await sb.from('anotacoes').select('conteudo').eq('user_id',session.user.id).eq('data',ymd(d)).maybeSingle();
+  if(an) note=an.conteudo||'';
+  const body=document.getElementById('d-body');
+  let html='';
+  if(!dev){ html+='<div class="empty-note">Ainda não há devocional cadastrado para esta data.'+(isAdmin?' Você pode cadastrá-lo na área de Administração.':'')+'</div>'; }
+  const cards=[
+    {ic:'#3f6fb0',svg:'<path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>',h:'Texto Bíblico',sub:dev&&dev.texto_ref,p:dev&&dev.texto},
+    {ic:'#8a9b5e',svg:'<path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.5 19 2c1 2 0 7-2 9.5"/><path d="M5 21c.5-4.5 2.5-8 7-10"/>',h:'Meditação',p:dev&&dev.meditacao},
+    {ic:'#cda349',svg:'<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4"/><circle cx="12" cy="12" r="1"/>',h:'Desafio Prático',p:dev&&dev.desafio},
+    {ic:'#3f6fb0',svg:'<path d="M12 21c-3-2-7-5-7-10a4 4 0 0 1 7-2 4 4 0 0 1 7 2c0 5-4 8-7 10z"/>',h:'Oração',p:dev&&dev.oracao},
+  ];
+  cards.forEach((c,i)=>{
+    const txt=c.p||'—';
+    html+='<div class="dcard" onclick="toggleCard('+i+')" id="dc'+i+'"><div class="ico" style="background:'+c.ic+'"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2">'+c.svg+'</svg></div><div class="c"><h4>'+c.h+'<span class="chev">›</span></h4>'+(c.sub?'<div class="sub">'+esc(c.sub)+'</div>':'')+'<p>'+esc(txt.length>72?txt.slice(0,72).trim()+'…':txt)+'</p><div class="full">'+esc(txt)+'</div></div></div>';
+  });
+  // observações (editável)
+  html+='<div class="dcard" style="cursor:default" onclick="event.stopPropagation()"><div class="ico" style="background:#caa15c"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M12 20h9M16.5 3.5a2 2 0 0 1 3 3L7 19l-4 1 1-4z"/></svg></div><div class="c"><h4>Observações diárias</h4><textarea class="note-area" id="note-in" placeholder="Escreva aqui suas reflexões e pedidos de oração..." oninput="noteDirty()">'+esc(note)+'</textarea><div class="note-status" id="note-st">Salvo automaticamente</div></div></div>';
+  // leitura anual
+  if(dev&&dev.leitura_anual){
+    const pct=Math.min(99,Math.round(dayOfYear(d)/3.65));
+    html+='<div class="dcard" style="cursor:default" onclick="event.stopPropagation()"><div class="ico" style="background:var(--green)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2zM22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg></div><div class="c"><h4>Leitura da Bíblia anual</h4><div class="sub">'+esc(dev.leitura_anual)+'</div><div class="progress"><div class="bar" style="width:'+pct+'%"></div></div><div class="read-row"><span>Plano anual</span><span>'+pct+'%</span></div></div></div>';
+  }
+  body.innerHTML=html;
+}
+function toggleCard(i){document.getElementById('dc'+i)?.classList.toggle('open')}
+let noteTimer;
+function noteDirty(){
+  document.getElementById('note-st').textContent='Salvando…';
+  clearTimeout(noteTimer);
+  noteTimer=setTimeout(saveNote,900);
+}
+async function saveNote(){
+  const v=document.getElementById('note-in').value;
+  const {error}=await sb.from('anotacoes').upsert({user_id:session.user.id,data:ymd(state.date),conteudo:v,atualizado_em:new Date().toISOString()},{onConflict:'user_id,data'});
+  document.getElementById('note-st').textContent=error?'Erro ao salvar':'Salvo ✓';
+}
+function changeDay(n){state.date=new Date(state.date.getTime()+n*864e5);speechSynthesis.cancel();renderDev()}
+function openDateJump(){const inp=document.getElementById('d-jump');inp.value=ymd(state.date);if(inp.showPicker){try{inp.showPicker();return;}catch(e){}}inp.click();}
+function jumpDate(v){if(!v)return;const p=v.split('-').map(Number);state.date=new Date(p[0],p[1]-1,p[2]);speechSynthesis.cancel();renderDev();}
+async function shareDev(){
+  const d=state.date,v=state.dev;
+  if(!v){toast('Sem devocional para compartilhar nesta data.');return;}
+  const txt='📖 Devocional — '+fmtDate(d)+'\n\n"'+(v.texto||'')+'" ('+(v.texto_ref||'')+')\n\n🌿 '+(v.meditacao||'')+'\n\n🙏 '+(v.oracao||'')+'\n\n— Igreja Vidas';
+  if(navigator.share){try{await navigator.share({title:'Devocional Igreja Vidas',text:txt})}catch(e){}}
+  else{try{await navigator.clipboard.writeText(txt);toast('Devocional copiado 📋')}catch(e){toast('Não foi possível compartilhar.')}}
+}
+let speaking=false;
+function speakDev(){
+  if(speaking){speechSynthesis.cancel();speaking=false;toast('Leitura interrompida');return;}
+  const v=state.dev; if(!v){toast('Sem conteúdo para ouvir.');return;}
+  const u=new SpeechSynthesisUtterance('Devocional. '+(v.tema_semana||'')+'. Texto bíblico. '+(v.texto||'')+'. Meditação. '+(v.meditacao||'')+'. Desafio prático. '+(v.desafio||'')+'. Oração. '+(v.oracao||''));
+  u.lang='pt-BR';u.rate=.95;u.onend=()=>{speaking=false};
+  speechSynthesis.cancel();speechSynthesis.speak(u);speaking=true;toast('▶ Ouvindo…');
+}
+
+/* ---------- ADMIN ---------- */
+function admTab(t,btn){document.querySelectorAll('.tabs button').forEach(b=>b.classList.remove('active'));btn.classList.add('active');document.querySelectorAll('.adm-pane').forEach(p=>p.classList.remove('active'));document.getElementById('ap-'+t).classList.add('active')}
+function openAdmin(){
+  const h=state.home;
+  document.getElementById('a-quote').value=h.quote||'';
+  document.getElementById('a-quote-ref').value=h.quoteRef||'';
+  document.getElementById('a-year').value=h.year||'';
+  document.getElementById('a-year-ref').value=h.yearRef||'';
+  const cp=document.getElementById('capa-preview');
+  if(h.capa){cp.src=h.capa;cp.style.display='block'}else{cp.style.display='none'}
+  const mw=document.getElementById('a-months');mw.innerHTML='';
+  twelveMonths(h.months).forEach((m,i)=>{const r=document.createElement('div');r.className='month-edit';r.innerHTML='<span class="mm">'+MONTH_ABBR[i]+'</span><input class="inp" data-mi="'+i+'" data-f="t" placeholder="Tema do mês" value="'+esc(m.t)+'"><input class="inp" data-mi="'+i+'" data-f="r" placeholder="Referência" value="'+esc(m.r)+'">';mw.appendChild(r)});
+  if(!document.getElementById('a-d-date').value) document.getElementById('a-d-date').value=ymd(state.date);
+  loadDevForEdit(true);
+  loadUsers();
+}
+async function saveHome(){
+  const months=twelveMonths(state.home.months);
+  document.querySelectorAll('#a-months .inp').forEach(inp=>{months[+inp.dataset.mi][inp.dataset.f]=inp.value});
+  state.home.months=months;
+  const now=new Date().toISOString();
+  const rows=[
+    {chave:'citacao',valor:{texto:document.getElementById('a-quote').value,ref:document.getElementById('a-quote-ref').value},atualizado_em:now},
+    {chave:'tema_ano',valor:{titulo:document.getElementById('a-year').value,ref:document.getElementById('a-year-ref').value},atualizado_em:now},
+    {chave:'temas_meses',valor:months,atualizado_em:now}
+  ];
+  const {error}=await sb.from('config_home').upsert(rows,{onConflict:'chave'});
+  if(error){toast('Erro ao salvar.');return;}
+  await loadHome();toast('✓ Tela inicial atualizada');
+}
+async function uploadCapa(input){
+  const file=input.files&&input.files[0]; if(!file) return;
+  if(file.size>5*1024*1024){toast('Imagem muito grande (máx. 5 MB).');input.value='';return;}
+  toast('Enviando imagem…');
+  const ext=(file.name.split('.').pop()||'jpg').toLowerCase();
+  const path='capa-'+Date.now()+'.'+ext;
+  const {error}=await sb.storage.from('capas').upload(path,file,{cacheControl:'3600',upsert:false});
+  if(error){toast('Erro ao enviar: '+error.message);return;}
+  const url=sb.storage.from('capas').getPublicUrl(path).data.publicUrl;
+  const {error:e2}=await sb.from('config_home').upsert({chave:'capa',valor:url,atualizado_em:new Date().toISOString()},{onConflict:'chave'});
+  if(e2){toast('Imagem enviada, mas falhou ao salvar.');return;}
+  state.home.capa=url;
+  const cp=document.getElementById('capa-preview');cp.src=url;cp.style.display='block';
+  input.value='';
+  toast('✓ Imagem de capa atualizada');
+}
+async function loadDevForEdit(silent){
+  const k=document.getElementById('a-d-date').value;if(!k)return;
+  const {data:v}=await sb.from('devocionais').select('*').eq('data',k).maybeSingle();
+  document.getElementById('a-d-week').value=v?(v.tema_semana||''):'';
+  document.getElementById('a-d-textref').value=v?(v.texto_ref||''):'';
+  document.getElementById('a-d-read').value=v?(v.leitura_anual||''):'';
+  document.getElementById('a-d-text').value=v?(v.texto||''):'';
+  document.getElementById('a-d-medit').value=v?(v.meditacao||''):'';
+  document.getElementById('a-d-chall').value=v?(v.desafio||''):'';
+  document.getElementById('a-d-prayer').value=v?(v.oracao||''):'';
+  if(!silent) toast(v?'Devocional desta data carregado para edição':'Dia livre — campos limpos para novo cadastro');
+}
+async function saveDev(){
+  const k=document.getElementById('a-d-date').value;if(!k){toast('Escolha uma data');return;}
+  const row={data:k,tema_semana:document.getElementById('a-d-week').value,texto_ref:document.getElementById('a-d-textref').value,texto:document.getElementById('a-d-text').value,meditacao:document.getElementById('a-d-medit').value,desafio:document.getElementById('a-d-chall').value,oracao:document.getElementById('a-d-prayer').value,leitura_anual:document.getElementById('a-d-read').value,atualizado_em:new Date().toISOString()};
+  const {error}=await sb.from('devocionais').upsert(row,{onConflict:'data'});
+  if(error){toast('Erro: '+error.message);return;}
+  toast('✓ Devocional salvo para '+k);
+}
+async function loadUsers(){
+  const {data}=await sb.from('membros').select('*').order('ativo',{ascending:true}).order('criado_em',{ascending:false});
+  const list=document.getElementById('u-list');list.innerHTML='';
+  document.getElementById('u-count').textContent=(data||[]).length;
+  (data||[]).forEach(u=>{
+    const el=document.createElement('div');el.className='user-item'+(u.ativo?'':' pend');
+    const initial=(u.nome||u.email||'?')[0].toUpperCase();
+    let right = u.ativo
+      ? '<select class="role-sel" onchange="setRole(\''+u.email+'\',this.value)"><option value="membro"'+(u.papel==='membro'?' selected':'')+'>Membro</option><option value="lider"'+(u.papel==='lider'?' selected':'')+'>Líder</option><option value="admin"'+(u.papel==='admin'?' selected':'')+'>Admin</option></select>'
+      : '<button class="mini ok" onclick="approve(\''+u.email+'\')">Aprovar</button>';
+    el.innerHTML='<div class="av">'+initial+'</div><div class="ui"><div class="n">'+esc(u.nome||'—')+(u.ativo?'':' · pendente')+'</div><div class="e">'+esc(u.email)+'</div></div>'+right+'<button class="mini del" onclick="delUser(\''+u.email+'\')">×</button>';
+    list.appendChild(el);
+  });
+}
+async function approve(email){const {error}=await sb.from('membros').update({ativo:true}).eq('email',email);if(error){toast('Erro ao aprovar');return}toast('✓ Membro aprovado');loadUsers()}
+async function setRole(email,papel){const {error}=await sb.from('membros').update({papel}).eq('email',email);toast(error?'Erro':'Papel atualizado');}
+async function delUser(email){if(email===me.email){toast('Você não pode remover a si mesmo.');return}const {error}=await sb.from('membros').delete().eq('email',email);if(error){toast('Erro ao remover');return}toast('Removido da lista');loadUsers()}
+async function addUser(){
+  const email=document.getElementById('a-u-email').value.trim().toLowerCase();
+  const nome=document.getElementById('a-u-name').value.trim();
+  if(!email){toast('Informe o e-mail');return}
+  const {error}=await sb.from('membros').upsert({email,nome:nome||email.split('@')[0],papel:'membro',ativo:true},{onConflict:'email'});
+  if(error){toast('Erro: '+error.message);return}
+  document.getElementById('a-u-email').value='';document.getElementById('a-u-name').value='';
+  toast('✓ E-mail autorizado');loadUsers();
+}
+
+/* ---------- IMPORTAÇÃO EM LOTE ---------- */
+// Plano anual de leitura (Projeto Timóteo) — usado para preencher a leitura de cada dia
+const RP={
+'01':['Gênesis 1-4','Gênesis 5-8','Gênesis 9-12','Gênesis 13-17','Gênesis 18-20','Gênesis 21-23','Gênesis 24-25','Gênesis 26-28','Gênesis 29-31','Gênesis 32-35','Gênesis 36-38','Gênesis 39-41','Gênesis 42-43','Gênesis 44-46','Gênesis 47-50','Êxodo 1-4','Êxodo 5-7','Êxodo 8-10','Êxodo 11-13','Êxodo 14-16','Êxodo 17-20','Êxodo 21-23','Êxodo 24-27','Êxodo 28-30','Êxodo 31-34','Êxodo 35-37','Êxodo 38-40','Levítico 1-4','Levítico 5-7','Levítico 8-10','Levítico 11-13'],
+'02':['Levítico 14-15','Levítico 16-18','Levítico 19-21','Levítico 22-23','Levítico 24-25','Levítico 26-27','Números 1-2','Números 3-4','Números 5-6','Números 7','Números 8-10','Números 11-13','Números 14-15','Números 16-18','Números 19-21','Números 22-24','Números 25-26','Números 27-29','Números 30-32','Números 33-36','Deuteronômio 1-2','Deuteronômio 3-4','Deuteronômio 5-8','Deuteronômio 9-11','Deuteronômio 12-15','Deuteronômio 16-19','Deuteronômio 20-22','Deuteronômio 23-25'],
+'03':['Deuteronômio 26-27','Deuteronômio 28-29','Deuteronômio 30-32','Deuteronômio 33-34','Josué 1-4','Josué 5-7','Josué 8-10','Josué 11-13','Josué 14-17','Josué 18-20','Josué 21-22','Josué 23-24','Juízes 1-3','Juízes 4-5','Juízes 6-8','Juízes 9-10','Juízes 11-13','Juízes 14-16','Juízes 17-19','Juízes 20-21','Rute 1-4','1 Samuel 1-3','1 Samuel 4-7','1 Samuel 8-12','1 Samuel 13-14','1 Samuel 15-16','1 Samuel 17-18','1 Samuel 19-21','1 Samuel 22-24','1 Samuel 25-27','1 Samuel 28-31'],
+'04':['2 Samuel 1-3','2 Samuel 4-7','2 Samuel 8-11','2 Samuel 12-13','2 Samuel 14-16','2 Samuel 17-19','2 Samuel 20-22','2 Samuel 23-24','1 Reis 1-2','1 Reis 3-5','1 Reis 6-7','1 Reis 8-9','1 Reis 10-12','1 Reis 13-15','1 Reis 16-18','1 Reis 19-20','1 Reis 21-22','2 Reis 1-3','2 Reis 4-5','2 Reis 6-8','2 Reis 9-10','2 Reis 11-13','2 Reis 14-16','2 Reis 17-18','2 Reis 19-21','2 Reis 22-23','2 Reis 24-25','1 Crônicas 1-2','1 Crônicas 3-4','1 Crônicas 5-6'],
+'05':['1 Crônicas 7-9','1 Crônicas 10-12','1 Crônicas 13-16','1 Crônicas 17-19','1 Crônicas 20-23','1 Crônicas 24-26','1 Crônicas 27-29','2 Crônicas 1-4','2 Crônicas 5-7','2 Crônicas 8-11','2 Crônicas 12-16','2 Crônicas 17-20','2 Crônicas 21-24','2 Crônicas 25-28','2 Crônicas 29-31','2 Crônicas 32-34','2 Crônicas 35-36','Esdras 1-4','Esdras 5-7','Esdras 8-10','Neemias 1-3','Neemias 4-7','Neemias 8-10','Neemias 11-13','Ester 1-5','Ester 6-10','Jó 1-4','Jó 5-8','Jó 9-12','Jó 13-16','Jó 17-20'],
+'06':['Jó 21-24','Jó 25-30','Jó 31-34','Jó 35-38','Jó 39-42','Salmos 1-8','Salmos 9-17','Salmos 18-21','Salmos 22-27','Salmos 28-33','Salmos 34-37','Salmos 38-42','Salmos 43-49','Salmos 50-55','Salmos 56-61','Salmos 62-68','Salmos 69-72','Salmos 73-77','Salmos 78-80','Salmos 81-88','Salmos 89-94','Salmos 95-103','Salmos 104-106','Salmos 107-111','Salmos 112-118','Salmos 119','Salmos 120-133','Salmos 134-140','Salmos 141-150','Provérbios 1-3'],
+'07':['Provérbios 4-7','Provérbios 8-11','Provérbios 12-14','Provérbios 15-17','Provérbios 18-20','Provérbios 21-23','Provérbios 24-26','Provérbios 27-29','Provérbios 30-31','Eclesiastes 1-4','Eclesiastes 5-8','Eclesiastes 9-12','Cânticos 1-4','Cânticos 5-8','Isaías 1-3','Isaías 4-8','Isaías 9-11','Isaías 12-14','Isaías 15-19','Isaías 20-24','Isaías 25-28','Isaías 29-31','Isaías 32-34','Isaías 35-37','Isaías 38-40','Isaías 41-43','Isaías 44-46','Isaías 47-49','Isaías 50-52','Isaías 53-56','Isaías 57-59'],
+'08':['Isaías 60-63','Isaías 64-66','Jeremias 1-3','Jeremias 4-5','Jeremias 6-8','Jeremias 9-11','Jeremias 12-14','Jeremias 15-17','Jeremias 18-21','Jeremias 22-24','Jeremias 25-27','Jeremias 28-30','Jeremias 31-32','Jeremias 33-36','Jeremias 37-39','Jeremias 40-43','Jeremias 44-46','Jeremias 47-48','Jeremias 49','Jeremias 50','Jeremias 51-52','Lamentações 1-2','Lamentações 3-5','Ezequiel 1-4','Ezequiel 5-8','Ezequiel 9-12','Ezequiel 13-15','Ezequiel 16-17','Ezequiel 18-20','Ezequiel 21-22','Ezequiel 23-24'],
+'09':['Ezequiel 25-27','Ezequiel 28-30','Ezequiel 31-32','Ezequiel 33-35','Ezequiel 36-38','Ezequiel 39-40','Ezequiel 41-43','Ezequiel 44-46','Ezequiel 47-48','Daniel 1-3','Daniel 4-5','Daniel 6-8','Daniel 9-12','Oséias 1-4','Oséias 5-9','Oséias 10-14','Joel 1-3','Amós 1-4','Amós 5-9','Obadias','Jonas 1-4','Miquéias 1-4','Miquéias 5-7','Naum 1-3','Habacuque 1-3','Sofonias 1-3','Ageu 1-2','Zacarias 1-5','Zacarias 6-10','Zacarias 11-14'],
+'10':['Malaquias 1-4','Mateus 1-4','Mateus 5-6','Mateus 7-9','Mateus 10-11','Mateus 12-13','Mateus 14-17','Mateus 18-20','Mateus 21-22','Mateus 23-24','Mateus 25-26','Mateus 27-28','Marcos 1-3','Marcos 4-5','Marcos 6-7','Marcos 8-9','Marcos 10-11','Marcos 12-13','Marcos 14','Marcos 15-16','Lucas 1-2','Lucas 3-4','Lucas 5-6','Lucas 7-8','Lucas 9-10','Lucas 11-12','Lucas 13-15','Lucas 16-18','Lucas 19-20','Lucas 21-22','Lucas 23-24'],
+'11':['João 1-2','João 3-4','João 5-6','João 7-8','João 9-10','João 11-12','João 13-15','João 16-17','João 18-19','João 20-21','Atos 1-3','Atos 4-5','Atos 6-7','Atos 8-9','Atos 10-11','Atos 12-13','Atos 14-15','Atos 16-17','Atos 18-19','Atos 20-21','Atos 22-23','Atos 24-26','Atos 27-28','Romanos 1-3','Romanos 4-7','Romanos 8-10','Romanos 11-14','Romanos 15-16','1 Coríntios 1-4','1 Coríntios 5-9'],
+'12':['1 Coríntios 10-13','1 Coríntios 14-16','2 Coríntios 1-4','2 Coríntios 5-9','2 Coríntios 10-13','Gálatas 1-3','Gálatas 4-6','Efésios 1-3','Efésios 4-6','Filipenses 1-4','Colossenses 1-4','1 Tessalonicenses 1-5','2 Tessalonicenses 1-3','1 Timóteo 1-6','2 Timóteo 1-4','Filemom; Tito 1-3','Hebreus 1-4','Hebreus 5-8','Hebreus 9-10','Hebreus 11-13','Tiago 1-5','1 Pedro 1-5; 2 Pedro 1-3','1 João 1-5','2 João; 3 João; Judas','Apocalipse 1-3','Apocalipse 4-7','Apocalipse 8-11','Apocalipse 12-14','Apocalipse 15-17','Apocalipse 18-19','Apocalipse 20-22']
+};
+const MESES={janeiro:1,fevereiro:2,marco:3,abril:4,maio:5,junho:6,julho:7,agosto:8,setembro:9,outubro:10,novembro:11,dezembro:12};
+function norm(s){return (s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim()}
+function parseDateLine(line,year){
+  const m=norm(line).match(/^(\d{1,2})\s+de\s+([a-z]+)/);
+  if(!m) return null;
+  const mes=MESES[m[2]]; if(!mes) return null;
+  const mm=String(mes).padStart(2,'0'), dd=parseInt(m[1],10);
+  return {data:year+'-'+mm+'-'+String(dd).padStart(2,'0'), mm, dd};
+}
+function parseDay(lines,year){
+  const dm=parseDateLine(lines[0],year); if(!dm) return null;
+  let i=1; const skip=()=>{while(i<lines.length && !lines[i].trim()) i++;};
+  skip(); let titulo=''; if(i<lines.length){titulo=lines[i].trim();i++;}
+  skip(); if(i<lines.length && norm(lines[i])==='texto biblico') i++;
+  skip(); let ref='',v0='';
+  if(i<lines.length){const rl=lines[i].trim();i++;const m=rl.match(/\s[—–\-]\s/);if(m){const idx=rl.indexOf(m[0]);ref=rl.slice(0,idx).trim();v0=rl.slice(idx+m[0].length).trim();}else ref=rl;}
+  const buf={verse:[],medit:[],desafio:[],oracao:[]}; if(v0) buf.verse.push(v0); let cur='verse';
+  for(;i<lines.length;i++){const t=lines[i].trim();if(!t)continue;const n=norm(t);
+    if(n==='meditacao'){cur='medit';continue;} if(n==='desafio pratico'){cur='desafio';continue;}
+    if(n==='oracao'){cur='oracao';continue;} if(n==='texto biblico'){cur='verse';continue;} buf[cur].push(t);}
+  return {data:dm.data,tema_semana:titulo,texto_ref:ref,texto:buf.verse.join('\n\n'),meditacao:buf.medit.join('\n\n'),desafio:buf.desafio.join('\n\n'),oracao:buf.oracao.join('\n\n'),leitura_anual:(RP[dm.mm]&&RP[dm.mm][dm.dd-1])||'',atualizado_em:new Date().toISOString()};
+}
+function parseDevocionais(text,year){
+  const lines=text.split(/\r?\n/); const starts=[];
+  for(let i=0;i<lines.length;i++){ if(parseDateLine(lines[i],year)) starts.push(i); }
+  const days=[];
+  for(let s=0;s<starts.length;s++){ const block=lines.slice(starts[s], s+1<starts.length?starts[s+1]:lines.length); const d=parseDay(block,year); if(d&&d.tema_semana) days.push(d); }
+  return days;
+}
+function impYear(){const y=(document.getElementById('imp-year').value||'').trim();return /^\d{4}$/.test(y)?y:'2027'}
+function impPreview(){
+  const text=document.getElementById('imp-text').value;
+  const st=document.getElementById('imp-status'), pv=document.getElementById('imp-preview');
+  if(!text.trim()){st.textContent='';pv.innerHTML='';return;}
+  const days=parseDevocionais(text,impYear());
+  st.textContent=days.length?('Reconheci '+days.length+' dia(s).'):'Ainda não reconheci nenhum dia.';
+  if(days.length){const d=days[0];pv.innerHTML='<b>Prévia do 1º dia ('+esc(d.data)+'):</b><br>Tema: '+esc(d.tema_semana||'—')+'<br>Texto: '+esc(d.texto_ref||'—')+'<br>Leitura: '+esc(d.leitura_anual||'—')+'<br>Meditação: '+esc((d.meditacao||'').slice(0,80))+'…';}
+  else pv.innerHTML='';
+}
+async function impFile(input){
+  const f=input.files&&input.files[0]; if(!f) return;
+  try{
+    if(f.name.toLowerCase().endsWith('.docx')){
+      const buf=await f.arrayBuffer();
+      const res=await window.mammoth.extractRawText({arrayBuffer:buf});
+      document.getElementById('imp-text').value=res.value;
+    }else{ document.getElementById('imp-text').value=await f.text(); }
+    impPreview();
+  }catch(e){ toast('Erro ao ler o arquivo: '+e.message); }
+}
+async function runImport(){
+  const text=document.getElementById('imp-text').value;
+  if(!text.trim()){toast('Cole o texto ou envie um arquivo.');return;}
+  const year=impYear();
+  const days=parseDevocionais(text,year);
+  if(!days.length){toast('Não reconheci nenhum dia no texto.');return;}
+  if(!confirm('Importar '+days.length+' dia(s) para o ano '+year+'?\n\nDias já existentes nessas datas serão atualizados.')) return;
+  const st=document.getElementById('imp-status'); let ok=0,fail=0;
+  for(let i=0;i<days.length;i+=50){
+    st.textContent='Enviando… ('+Math.min(i+50,days.length)+'/'+days.length+')';
+    const {error}=await sb.from('devocionais').upsert(days.slice(i,i+50),{onConflict:'data'});
+    if(error){fail+=Math.min(50,days.length-i);} else {ok+=Math.min(50,days.length-i);}
+  }
+  st.textContent='Concluído: '+ok+' dia(s) importado(s)'+(fail?(' · '+fail+' com erro'):'')+'.';
+  toast(fail?('Importação com '+fail+' erro(s)'):('✓ '+ok+' dias importados!'));
+}
+</script>
+</body>
+</html>
