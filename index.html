@@ -156,7 +156,18 @@ body.dark .empty-note{color:var(--gold)}
 .progress{height:9px;background:var(--green-soft);border-radius:20px;overflow:hidden;margin-top:8px}
 .progress .bar{height:100%;background:linear-gradient(90deg,var(--green),var(--gold));border-radius:20px}
 .read-row{display:flex;justify-content:space-between;font-size:.95rem;color:var(--ink-soft);margin-top:6px}
-.botnav{display:flex;background:var(--card);border-top:1px solid var(--line);flex-shrink:0;padding:8px 4px}
+.botnav{display:flex;background:var(--card);border-top:1px solid var(--line);flex-shrink:0;padding:8px 4px calc(8px + env(safe-area-inset-bottom))}
+@media (max-width:480px){
+  body{padding:0;background:var(--cream)}
+  .phone{max-width:none;width:100%;height:100vh;height:100dvh;border-radius:0;box-shadow:none}
+}
+@media (display-mode:standalone){
+  .topbar{padding-top:calc(8px + max(env(safe-area-inset-top), 48px))}
+  .dev-head{padding-top:calc(8px + max(env(safe-area-inset-top), 48px))}
+  .adm-head{padding-top:calc(8px + max(env(safe-area-inset-top), 48px))}
+  #login .scroll{padding-top:calc(8px + max(env(safe-area-inset-top), 48px))}
+  #pending .scroll{padding-top:calc(20px + max(env(safe-area-inset-top), 48px))}
+}
 .botnav button{flex:1;background:none;border:0;cursor:pointer;color:var(--ink-soft);display:flex;flex-direction:column;align-items:center;gap:3px;font-family:'Cinzel';font-size:.6rem;padding:6px 2px;transition:.2s;letter-spacing:.3px}
 .botnav button:hover{color:var(--green)}
 .botnav button.accent{color:var(--green)}
