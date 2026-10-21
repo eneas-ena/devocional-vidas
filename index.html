@@ -17,6 +17,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/mammoth@1.8.0/mammoth.browser.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
 <style>
 :root{
   --green:#6c773f;--green-mid:#5b6536;--green-deep:#4a5530;--green-soft:#e9ecdc;
@@ -179,7 +180,7 @@ body.dark .empty-note{color:var(--gold)}
 .adm-top .icon-btn{color:#fbf7ea}.adm-top .icon-btn:hover{background:rgba(255,255,255,.12)}
 .adm-top h2{flex:1;text-align:center;font-family:'Cinzel';font-size:1.25rem;font-weight:600}
 .tabs{display:flex;gap:6px;margin-top:14px;background:rgba(255,255,255,.1);padding:5px;border-radius:13px}
-.tabs button{flex:1;border:0;background:none;color:#e8e2cc;font-family:'Cinzel';font-size:.66rem;padding:8px 3px;border-radius:9px;cursor:pointer;transition:.2s}
+.tabs button{flex:1;border:0;background:none;color:#e8e2cc;font-family:'Cinzel';font-size:.58rem;padding:7px 2px;border-radius:9px;cursor:pointer;transition:.2s}
 .tabs button.active{background:var(--cream);color:var(--green-mid)}
 .adm-body{padding:18px 16px 30px}
 .adm-pane{display:none}.adm-pane.active{display:block;animation:fade .3s}
@@ -342,6 +343,7 @@ textarea.inp{resize:vertical;min-height:70px;line-height:1.4}
         <button onclick="admTab('dev',this)">Devocional</button>
         <button onclick="admTab('users',this)">Usuários</button>
         <button onclick="admTab('import',this)">Importar</button>
+        <button onclick="admTab('livro',this)">Livro</button>
       </div>
     </div>
     <div class="scroll"><div class="adm-body">
@@ -395,6 +397,17 @@ textarea.inp{resize:vertical;min-height:70px;line-height:1.4}
         </div>
         <div style="font-size:.86rem;color:var(--ink-soft);line-height:1.4;padding:0 4px">Importe um mês de cada vez. Se um mês sair errado, basta reenviá-lo — dias com a mesma data são atualizados, não duplicados. A "Leitura da Bíblia anual" é preenchida automaticamente pelo plano do Projeto Timóteo.</div>
       </div>
+      <div class="adm-pane" id="ap-livro">
+        <div class="fieldset"><h4>📕 Livro impresso (PDF)</h4>
+          <div class="row2">
+            <div><label class="fl">Ano</label><input class="inp" id="pdf-year" type="number" value="2027"></div>
+            <div><label class="fl">Página inicial</label><input class="inp" id="pdf-start" type="number" value="13"></div>
+          </div>
+          <div id="pdf-status" style="font-size:.92rem;color:var(--green);margin-top:10px;min-height:18px"></div>
+          <button class="adm-btn" onclick="gerarLivroPDF()">Gerar Livro do Ano (PDF)</button>
+        </div>
+        <div style="font-size:.86rem;color:var(--ink-soft);line-height:1.4;padding:0 4px">Gera um único PDF (130×190 mm) com os 365 dias: numeração contínua a partir da página inicial, e uma página em branco quando necessário para cada mês começar em página ímpar. O título em caixa alta é o tema do mês; o subtítulo em itálico é o tema do dia.</div>
+      </div>
     </div></div>
   </section>
 
@@ -409,7 +422,7 @@ textarea.inp{resize:vertical;min-height:70px;line-height:1.4}
       <a onclick="closeDrawer();toggleDark()"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg> Alternar Tema</a>
       <a onclick="closeDrawer();doLogout()"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg> Sair</a>
     </nav>
-    <div class="foot">Igreja Vidas · v1.0</div>
+    <div class="foot">Igreja Vidas · v1.1</div>
   </aside>
 
   <div class="toast" id="toast"></div>
@@ -790,6 +803,79 @@ async function runImport(){
   }
   st.textContent='Concluído: '+ok+' dia(s) importado(s)'+(fail?(' · '+fail+' com erro'):'')+'.';
   toast(fail?('Importação com '+fail+' erro(s)'):('✓ '+ok+' dias importados!'));
+}
+/* ---------- GERADOR DE PDF (livro impresso 130x190mm) ---------- */
+function layoutDay(doc, d, odd, pageNum){
+  const PW=130,PH=190,BOT=13,INNER=16,OUTER=11;
+  const MESES_UP=['JANEIRO','FEVEREIRO','MARÇO','ABRIL','MAIO','JUNHO','JULHO','AGOSTO','SETEMBRO','OUTUBRO','NOVEMBRO','DEZEMBRO'];
+  const mm=pt=>pt*0.352778;
+  const L=odd?INNER:OUTER, R=odd?OUTER:INNER, cw=PW-L-R, cx=L+cw/2;
+  const outerX=odd?(PW-OUTER):OUTER, outerAlign=odd?'right':'left';
+  doc.setFont('times','bold'); doc.setFontSize(22);
+  doc.text(String(d.dia).padStart(2,'0'), outerX, 12, {align:outerAlign});
+  doc.setFontSize(8);
+  doc.text(MESES_UP[d.mes-1], outerX, 16.5, {align:outerAlign});
+  doc.setFont('times','normal'); doc.setFontSize(8);
+  if(odd) doc.text(String(pageNum), INNER, PH-7, {align:'left'});
+  else doc.text(String(pageNum), PW-INNER, PH-7, {align:'right'});
+  let y=19.5;
+  doc.setLineWidth(0.5); doc.setDrawColor(0);
+  doc.line(L,y,L+cw,y); y+=6;
+  doc.setFont('times','bold'); doc.setFontSize(13);
+  doc.splitTextToSize((d.temaMes||'').toUpperCase(),cw).forEach(ln=>{doc.text(ln,cx,y+mm(13)*0.8,{align:'center'});y+=mm(13)*1.08;});
+  y+=1;
+  doc.setFont('times','italic'); doc.setFontSize(9.5); doc.setTextColor(60);
+  const sub='Dia '+d.diaAno+(d.temaDia?' — '+d.temaDia:'');
+  doc.splitTextToSize(sub,cw).forEach(ln=>{doc.text(ln,cx,y+mm(9.5)*0.8,{align:'center'});y+=mm(9.5)*1.1;});
+  doc.setTextColor(0); y+=2;
+  if(d.ref){doc.setFont('times','bold');doc.setFontSize(9);doc.text(d.ref,cx,y+mm(9)*0.8,{align:'center'});y+=mm(9)*1.1;}
+  y+=3;
+  function heading(txt){y+=4;doc.setFont('times','bold');doc.setFontSize(9.5);doc.text(txt,L,y+mm(9.5)*0.8,{align:'left'});y+=mm(9.5)*1.15+1.4;}
+  function paras(arr){doc.setFont('times','normal');doc.setFontSize(8);const lh=mm(8)*1.28;(arr||[]).forEach(p=>{if(!p)return;const lines=doc.splitTextToSize(p,cw);lines.forEach((ln,i)=>{if(i<lines.length-1)doc.text(ln,L,y+mm(8)*0.85,{align:'justify',maxWidth:cw});else doc.text(ln,L,y+mm(8)*0.85);y+=lh;});y+=1.2;});}
+  heading('Meditação'); paras(d.medit);
+  heading('Desafio Prático'); paras([d.desafio]);
+  heading('Oração'); paras([d.oracao]);
+  y+=1.5; doc.setLineWidth(0.4); doc.setLineDashPattern([0.5,0.9],0); doc.line(L,y,L+cw,y); doc.setLineDashPattern([],0);
+  heading('Leitura Anual da Bíblia');
+  if(d.leitura){doc.setFont('times','normal');doc.setFontSize(7.8);doc.splitTextToSize(d.leitura,cw).forEach(ln=>{doc.text(ln,cx,y+mm(7.8)*0.8,{align:'center'});y+=mm(7.8)*1.1;});}
+  heading('Minha resposta para Deus:');
+  doc.setLineWidth(0.4); doc.setDrawColor(140);
+  const gap=11, bottom=PH-BOT; let ly=y+gap;
+  while(ly<bottom){doc.line(L,ly,L+cw,ly);ly+=gap;}
+  doc.setDrawColor(0);
+}
+async function gerarLivroPDF(){
+  const st=document.getElementById('pdf-status');
+  if(!window.jspdf){st.textContent='A biblioteca de PDF não carregou. Verifique a internet e recarregue a página.';return;}
+  const year=parseInt(document.getElementById('pdf-year').value,10)||2027;
+  const start=parseInt(document.getElementById('pdf-start').value,10)||13;
+  st.textContent='Buscando os devocionais…';
+  const {data,error}=await sb.from('devocionais').select('*');
+  if(error){st.textContent='Erro ao buscar: '+error.message;return;}
+  const map={}; (data||[]).forEach(x=>map[x.data]=x);
+  const months=twelveMonths(state.home.months);
+  const {jsPDF}=window.jspdf;
+  const doc=new jsPDF({unit:'mm',format:[130,190],compress:true});
+  const folio=(p)=>{doc.setFont('times','normal');doc.setFontSize(8); if(p%2===1)doc.text(String(p),16,183,{align:'left'}); else doc.text(String(p),114,183,{align:'right'});};
+  let page=start, started=false, count=0, blanks=0;
+  const begin=()=>{ if(started) doc.addPage([130,190]); started=true; };
+  st.textContent='Montando as páginas…';
+  for(let m=1;m<=12;m++){
+    if(page%2===0){ begin(); folio(page); page++; blanks++; }
+    const dim=new Date(year,m,0).getDate();
+    for(let dom=1;dom<=dim;dom++){
+      const ds=year+'-'+String(m).padStart(2,'0')+'-'+String(dom).padStart(2,'0');
+      const dev=map[ds]||{};
+      const doy=Math.round((new Date(year,m-1,dom)-new Date(year,0,0))/864e5);
+      const d={dia:dom,mes:m,diaAno:doy,temaMes:months[m-1].t,temaDia:dev.tema_semana||'',ref:dev.texto_ref||'',
+        medit:(dev.meditacao||'').split(/\n{2,}/).map(s=>s.trim()).filter(Boolean),
+        desafio:dev.desafio||'',oracao:dev.oracao||'',leitura:dev.leitura_anual||''};
+      begin(); layoutDay(doc,d,page%2===1,page); page++; count++;
+      if(count%31===0){ st.textContent='Montando… '+count+' dias'; await new Promise(r=>setTimeout(r,0)); }
+    }
+  }
+  doc.save('Devocional_'+year+'.pdf');
+  st.textContent='✓ Pronto! '+count+' dias'+(blanks?(' + '+blanks+' página(s) em branco'):'')+'. O download começou.';
 }
 </script>
 </body>
