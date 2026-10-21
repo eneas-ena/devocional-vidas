@@ -422,7 +422,7 @@ textarea.inp{resize:vertical;min-height:70px;line-height:1.4}
       <a onclick="closeDrawer();toggleDark()"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg> Alternar Tema</a>
       <a onclick="closeDrawer();doLogout()"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg> Sair</a>
     </nav>
-    <div class="foot">Igreja Vidas · v1.2</div>
+    <div class="foot">Igreja Vidas · v1.3</div>
   </aside>
 
   <div class="toast" id="toast"></div>
@@ -805,64 +805,77 @@ async function runImport(){
   toast(fail?('Importação com '+fail+' erro(s)'):('✓ '+ok+' dias importados!'));
 }
 /* ---------- GERADOR DE PDF (livro impresso 130x190mm) ---------- */
-// placeDay: desenha OU mede um dia, com fator de escala s (para auto-ajuste).
+// placeContent: desenha OU mede o conteúdo de cima (título..oração), com escala s.
 // Retorna o y logo após o título "Minha resposta para Deus:" (fim do conteúdo).
-function placeDay(doc, d, odd, pageNum, s, draw){
-  const PW=130,PH=190,BOT=13,INNER=16,OUTER=11;
-  const MESES_UP=['JANEIRO','FEVEREIRO','MARÇO','ABRIL','MAIO','JUNHO','JULHO','AGOSTO','SETEMBRO','OUTUBRO','NOVEMBRO','DEZEMBRO'];
-  const mm=pt=>pt*0.352778;
+const PW=130,PH=190,BOT=13,INNER=16,OUTER=11;
+const MESES_UP=['JANEIRO','FEVEREIRO','MARÇO','ABRIL','MAIO','JUNHO','JULHO','AGOSTO','SETEMBRO','OUTUBRO','NOVEMBRO','DEZEMBRO'];
+const mm=pt=>pt*0.352778;
+const RESERVA=40;           // espaço fixo reservado ao rodapé (2 colunas)
+
+// desenha/mede o conteúdo de cima (título..oração). Retorna y após a oração.
+function placeContent(doc, d, odd, pageNum, s, draw){
   const L=odd?INNER:OUTER, R=odd?OUTER:INNER, cw=PW-L-R, cx=L+cw/2;
   if(draw){
-    const outerX=odd?(PW-OUTER):OUTER, outerAlign=odd?'right':'left';
-    doc.setFont('times','bold'); doc.setFontSize(22);
-    doc.text(String(d.dia).padStart(2,'0'), outerX, 12, {align:outerAlign});
-    doc.setFontSize(8);
-    doc.text(MESES_UP[d.mes-1], outerX, 16.5, {align:outerAlign});
+    const outerX=odd?(PW-OUTER):OUTER, oa=odd?'right':'left';
+    doc.setFont('times','bold'); doc.setFontSize(22); doc.text(String(d.dia).padStart(2,'0'),outerX,12,{align:oa});
+    doc.setFontSize(8); doc.text(MESES_UP[d.mes-1],outerX,16.5,{align:oa});
     doc.setFont('times','normal'); doc.setFontSize(8);
-    if(odd) doc.text(String(pageNum), INNER, PH-7, {align:'left'});
-    else doc.text(String(pageNum), PW-INNER, PH-7, {align:'right'});
+    if(odd) doc.text(String(pageNum),INNER,PH-7,{align:'left'}); else doc.text(String(pageNum),PW-INNER,PH-7,{align:'right'});
   }
   let y=19.5;
   if(draw){ doc.setLineWidth(0.5); doc.setDrawColor(0); doc.line(L,y,L+cw,y); }
   y+=6*s;
-  // título do mês (caixa alta)
   doc.setFont('times','bold'); doc.setFontSize(13*s);
   doc.splitTextToSize((d.temaMes||'').toUpperCase(),cw).forEach(ln=>{ if(draw)doc.text(ln,cx,y+mm(13*s)*0.8,{align:'center'}); y+=mm(13*s)*1.08; });
   y+=1*s;
-  // subtítulo (tema do dia)
   doc.setFont('times','italic'); doc.setFontSize(9.5*s); if(draw)doc.setTextColor(60);
-  const sub='Dia '+d.diaAno+(d.temaDia?' — '+d.temaDia:'');
-  doc.splitTextToSize(sub,cw).forEach(ln=>{ if(draw)doc.text(ln,cx,y+mm(9.5*s)*0.8,{align:'center'}); y+=mm(9.5*s)*1.1; });
+  doc.splitTextToSize('Dia '+d.diaAno+(d.temaDia?' — '+d.temaDia:''),cw).forEach(ln=>{ if(draw)doc.text(ln,cx,y+mm(9.5*s)*0.8,{align:'center'}); y+=mm(9.5*s)*1.1; });
   if(draw)doc.setTextColor(0); y+=2*s;
   if(d.ref){ doc.setFont('times','bold'); doc.setFontSize(9*s); if(draw)doc.text(d.ref,cx,y+mm(9*s)*0.8,{align:'center'}); y+=mm(9*s)*1.1; }
   y+=3*s;
   function heading(txt){ y+=4*s; doc.setFont('times','bold'); doc.setFontSize(9.5*s); if(draw)doc.text(txt,L,y+mm(9.5*s)*0.8,{align:'left'}); y+=mm(9.5*s)*1.15+1.4*s; }
   function paras(arr){ doc.setFont('times','normal'); doc.setFontSize(8*s); const lh=mm(8*s)*1.28;
     (arr||[]).forEach(p=>{ if(!p)return; const lines=doc.splitTextToSize(p,cw);
-      lines.forEach((ln,i)=>{ if(draw){ if(i<lines.length-1)doc.text(ln,L,y+mm(8*s)*0.85,{align:'justify',maxWidth:cw}); else doc.text(ln,L,y+mm(8*s)*0.85); } y+=lh; });
-      y+=1.2*s; }); }
+      lines.forEach((ln,i)=>{ if(draw){ if(i<lines.length-1)doc.text(ln,L,y+mm(8*s)*0.85,{align:'justify',maxWidth:cw}); else doc.text(ln,L,y+mm(8*s)*0.85); } y+=lh; }); y+=1.2*s; }); }
   heading('Meditação'); paras(d.medit);
   heading('Desafio Prático'); paras([d.desafio]);
   heading('Oração'); paras([d.oracao]);
-  y+=1.5*s;
-  if(draw){ doc.setLineWidth(0.4); doc.setLineDashPattern([0.5,0.9],0); doc.line(L,y,L+cw,y); doc.setLineDashPattern([],0); }
-  heading('Leitura Anual da Bíblia');
-  if(d.leitura){ doc.setFont('times','normal'); doc.setFontSize(7.8*s);
-    doc.splitTextToSize(d.leitura,cw).forEach(ln=>{ if(draw)doc.text(ln,cx,y+mm(7.8*s)*0.8,{align:'center'}); y+=mm(7.8*s)*1.1; }); }
-  heading('Minha resposta para Deus:');
-  if(draw){ // linhas de resposta no espaço que sobrar
-    doc.setLineWidth(0.4); doc.setDrawColor(140);
-    const gap=11, bottom=PH-BOT; let ly=y+gap;
-    while(ly<bottom){ doc.line(L,ly,L+cw,ly); ly+=gap; }
-    doc.setDrawColor(0);
-  }
   return y;
 }
+
+// rodapé fixo em duas colunas: esquerda = leitura, direita = linhas de resposta
+function drawBottom(doc, d, odd, startY){
+  const L=odd?INNER:OUTER, R=odd?OUTER:INNER, cw=PW-L-R;
+  let y=startY+2.5;
+  doc.setLineWidth(0.4); doc.setDrawColor(0); doc.setLineDashPattern([0.5,0.9],0);
+  doc.line(L,y,L+cw,y); doc.setLineDashPattern([],0);
+  y+=4.5;
+  const gut=4, colL=cw*0.40, colR=cw-colL-gut, rx=L+colL+gut;
+  // cabeçalhos das colunas
+  doc.setFont('times','bold'); doc.setFontSize(8.5);
+  const hL=doc.splitTextToSize('Leitura Anual da Bíblia', colL);
+  const hR=doc.splitTextToSize('Minha resposta para Deus:', colR);
+  hL.forEach((ln,i)=>doc.text(ln, L, y+mm(8.5)*0.8 + i*mm(8.5)*1.05));
+  hR.forEach((ln,i)=>doc.text(ln, rx, y+mm(8.5)*0.8 + i*mm(8.5)*1.05));
+  const hH = Math.max(hL.length,hR.length)*mm(8.5)*1.05;
+  let yL = y + hH + 2;
+  let yR = y + hH + 3;
+  // coluna esquerda: texto da leitura
+  doc.setFont('times','normal'); doc.setFontSize(7.6);
+  (doc.splitTextToSize(d.leitura||'', colL)).forEach(ln=>{ doc.text(ln, L, yL+mm(7.6)*0.8); yL+=mm(7.6)*1.15; });
+  // coluna direita: linhas de resposta até o rodapé
+  doc.setLineWidth(0.4); doc.setDrawColor(130);
+  const bottom=PH-BOT; const step=6.5;
+  while(yR<=bottom){ doc.line(rx, yR, rx+colR, yR); yR+=step; }
+  doc.setDrawColor(0);
+}
+
 function layoutDay(doc, d, odd, pageNum){
-  const LIMITE=190-13-1; // fundo útil
+  const LIMITE = PH-BOT-RESERVA;    // conteúdo de cima deve terminar aqui
   let s=1.0;
-  for(; s>0.6; s-=0.03){ if(placeDay(doc,d,odd,pageNum,s,false) <= LIMITE) break; }
-  placeDay(doc,d,odd,pageNum,s,true);
+  for(; s>0.55; s-=0.03){ if(placeContent(doc,d,odd,pageNum,s,false) <= LIMITE) break; }
+  const endY = placeContent(doc,d,odd,pageNum,s,true);
+  drawBottom(doc, d, odd, Math.min(endY, LIMITE));
   return s;
 }
 async function gerarLivroPDF(){
